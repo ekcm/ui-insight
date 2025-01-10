@@ -48,79 +48,83 @@ export const InputWebLink = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="Enter website URL"
-                    className="w-full px-4 py-2 rounded-lg border border-navy-light bg-navy text-neutral-50 placeholder-neutral-400 focus:outline-none focus:border-sand"
-                    required
-                    disabled={loading}
-                />
-                <button
-                    type="submit"
-                    className="px-6 py-2 bg-sand text-navy font-semibold rounded-lg hover:bg-sand-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={loading}
-                >
-                    {loading ? 'Analyzing...' : 'Analyze Website'}
-                </button>
-            </form>
+        <div className="w-full min-h-screen p-4">
+            <div className="max-w-2xl mx-auto mb-8">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <input
+                        type="url"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="Enter website URL"
+                        className="w-full px-4 py-2 rounded-lg border border-navy-light bg-navy text-neutral-50 placeholder-neutral-400 focus:outline-none focus:border-sand"
+                        required
+                        disabled={loading}
+                    />
+                    <button
+                        type="submit"
+                        className="px-6 py-2 bg-sand text-navy font-semibold rounded-lg hover:bg-sand-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={loading}
+                    >
+                        {loading ? 'Analyzing...' : 'Analyze Website'}
+                    </button>
+                </form>
 
-            {error && (
-                <div className="mt-4 p-4 bg-red-500 text-white rounded-lg">
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className="mt-4 p-4 bg-red-500 text-white rounded-lg">
+                        {error}
+                    </div>
+                )}
+            </div>
 
             {analysis && (
-                <div className="mt-8 space-y-8">
-                    {analysis.wcag_analysis.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-bold text-neutral-50 mb-4">WCAG Analysis</h2>
-                            <div className="grid grid-cols-1 gap-4">
-                                {analysis.wcag_analysis.map((item, index) => (
-                                    <div key={index} className="p-6 bg-navy rounded-lg border border-navy-light hover:border-sand transition-colors">
-                                        <h3 className="text-lg font-semibold text-sand mb-2">{item.guideline}</h3>
-                                        <p className="text-neutral-300">{item.issue}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {analysis.usability_insights.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-bold text-neutral-50 mb-4">Usability Insights</h2>
-                            <div className="grid grid-cols-1 gap-4">
-                                {analysis.usability_insights.map((insight, index) => (
-                                    <div key={index} className="p-6 bg-teal rounded-lg border border-navy-light hover:border-sand transition-colors">
-                                        <p className="text-neutral-300">{insight}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {analysis.recommendations.length > 0 && (
-                        <section>
-                            <h2 className="text-2xl font-bold text-neutral-50 mb-4">Recommendations</h2>
-                            <div className="grid grid-cols-1 gap-4">
-                                {analysis.recommendations.map((recommendation, index) => (
-                                    <div key={index} className="p-6 bg-sage-dark rounded-lg border border-navy-light hover:border-sand transition-colors">
-                                        <p className="text-neutral-300">{recommendation}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
+                <div className="w-full">
                     {analysis.wcag_analysis.length === 0 && 
                      analysis.usability_insights.length === 0 && 
-                     analysis.recommendations.length === 0 && (
-                        <div className="text-center text-neutral-300 p-6 bg-navy rounded-lg border border-navy-light">
+                     analysis.recommendations.length === 0 ? (
+                        <div className="text-center text-neutral-300 p-6 bg-navy rounded-lg border border-navy-light max-w-2xl mx-auto">
                             No issues found. The website appears to follow good accessibility and usability practices.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 h-[calc(100vh-12rem)] overflow-hidden">
+                            {analysis.wcag_analysis.length > 0 && (
+                                <section className="overflow-y-auto pr-4">
+                                    <h2 className="text-2xl font-bold text-neutral-50 mb-4 sticky top-0 bg-navy-dark pt-2 pb-4">WCAG Analysis</h2>
+                                    <div className="space-y-4">
+                                        {analysis.wcag_analysis.map((item, index) => (
+                                            <div key={index} className="p-6 bg-navy rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                                <h3 className="text-lg font-semibold text-sand mb-2">{item.guideline}</h3>
+                                                <p className="text-neutral-300">{item.issue}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {analysis.usability_insights.length > 0 && (
+                                <section className="overflow-y-auto pr-4">
+                                    <h2 className="text-2xl font-bold text-neutral-50 mb-4 sticky top-0 bg-navy-dark pt-2 pb-4">Usability Insights</h2>
+                                    <div className="space-y-4">
+                                        {analysis.usability_insights.map((insight, index) => (
+                                            <div key={index} className="p-6 bg-teal rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                                <p className="text-neutral-300">{insight}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {analysis.recommendations.length > 0 && (
+                                <section className="overflow-y-auto pr-4">
+                                    <h2 className="text-2xl font-bold text-neutral-50 mb-4 sticky top-0 bg-navy-dark pt-2 pb-4">Recommendations</h2>
+                                    <div className="space-y-4">
+                                        {analysis.recommendations.map((recommendation, index) => (
+                                            <div key={index} className="p-6 bg-sage-dark rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                                <p className="text-neutral-300">{recommendation}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
                         </div>
                     )}
                 </div>
