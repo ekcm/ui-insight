@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -16,6 +17,15 @@ model = genai.GenerativeModel("gemini-2.0-flash-exp")
 
 # Initialize FastAPI
 app = FastAPI(title="UI Insight - WCAG & Usability Analyzer")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 class WebLink(BaseModel):
     url: HttpUrl
