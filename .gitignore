@@ -1,0 +1,5 @@
+venv/
+.DS_Store
+
+# ignores any folders created
+heatmap_session*/
