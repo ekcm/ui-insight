@@ -3,3 +3,6 @@ venv/
 
 # ignores any folders created
 heatmap_session*/
+
+.env
+*.pyc
