@@ -1,12 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
+from typing import List, Dict
 import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 import requests
 from bs4 import BeautifulSoup
-from typing import List
+import json
 
 # Load environment variables
 load_dotenv()
@@ -21,19 +22,23 @@ app = FastAPI(title="UI Insight - WCAG & Usability Analyzer")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class WebLink(BaseModel):
     url: HttpUrl
 
+class WCAGIssue(BaseModel):
+    guideline: str
+    issue: str
+
 class AnalysisResponse(BaseModel):
-    wcag_analysis: List[dict]
-    usability_insights: List[str]
-    recommendations: List[str]
+    wcag_analysis: List[WCAGIssue] = []
+    usability_insights: List[str] = []
+    recommendations: List[str] = []
 
 def fetch_webpage_content(url: str) -> str:
     try:
@@ -44,45 +49,92 @@ def fetch_webpage_content(url: str) -> str:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error fetching webpage: {str(e)}")
 
-def analyze_with_gemini(content: str) -> dict:
+def analyze_with_gemini(content: str) -> Dict:
     prompt = f"""
-    Analyze the following HTML content for WCAG compliance and usability. Focus on:
-    1. WCAG 2.1 compliance issues
-    2. User interface usability concerns
-    3. Specific recommendations for improvement
-    
-    HTML Content:
-    {content[:15000]}  # Limiting content length for Gemini's context window
-    
-    Format your response as a JSON object with the following structure:
+    Analyze the following HTML content for WCAG compliance and usability. Provide a structured analysis following these exact guidelines:
+
+    HTML Content to Analyze:
+    {content[:15000]}
+
+    Rules for Response Format:
+    1. Respond ONLY with a JSON object
+    2. Do not include any markdown formatting or code blocks
+    3. Follow this exact structure:
     {{
         "wcag_analysis": [
-            {{"guideline": "WCAG guideline number", "issue": "Description of the issue"}}
+            {{
+                "guideline": "X.X.X Guideline Name",
+                "issue": "Clear description of the issue"
+            }}
         ],
-        "usability_insights": ["List of usability observations"],
-        "recommendations": ["List of specific recommendations"]
+        "usability_insights": [
+            "Clear, concise usability observation (one sentence per insight)"
+        ],
+        "recommendations": [
+            "Specific, actionable recommendation (one sentence per recommendation)"
+        ]
     }}
+
+    Guidelines for Content:
+    1. WCAG issues should include the guideline number and a clear description
+    2. Usability insights should be single, focused observations
+    3. Recommendations should be specific and actionable
+    4. All text should be clear and concise
+    5. Do not use markdown formatting within the text
+    6. Do not use code blocks or backticks in the text
     """
     
     try:
         response = model.generate_content(prompt)
-        response_text = response.candidates[0].content.parts[0].text
+        response_text = response.candidates[0].content.parts[0].text.strip()
         
-        # Since we asked Gemini to return JSON, we need to parse it
-        import json
+        # Clean up any potential markdown formatting
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+        response_text = response_text.strip()
+        
         try:
             analysis = json.loads(response_text)
+            
+            # Validate and clean the response
+            cleaned_response = {
+                "wcag_analysis": [
+                    {
+                        "guideline": str(item.get("guideline", "")).strip(),
+                        "issue": str(item.get("issue", "")).strip().replace("`", "'")
+                    }
+                    for item in analysis.get("wcag_analysis", [])
+                    if item.get("guideline") and item.get("issue")
+                ],
+                "usability_insights": [
+                    str(insight).strip().replace("`", "'")
+                    for insight in analysis.get("usability_insights", [])
+                    if insight
+                ],
+                "recommendations": [
+                    str(rec).strip().replace("`", "'")
+                    for rec in analysis.get("recommendations", [])
+                    if rec
+                ]
+            }
+            
+            return cleaned_response
+            
         except json.JSONDecodeError:
-            # Fallback in case the response isn't proper JSON
-            analysis = {
+            return {
                 "wcag_analysis": [],
                 "usability_insights": [],
-                "recommendations": [response_text]
+                "recommendations": ["Error parsing analysis results. Please try again."]
             }
-        
-        return analysis
+            
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing content: {str(e)}")
+        return {
+            "wcag_analysis": [],
+            "usability_insights": [],
+            "recommendations": [f"Error during analysis: {str(e)}"]
+        }
 
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_webpage(web_link: WebLink):

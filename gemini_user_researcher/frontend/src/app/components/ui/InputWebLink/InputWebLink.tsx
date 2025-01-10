@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 
+interface WCAGIssue {
+    guideline: string;
+    issue: string;
+}
+
 interface AnalysisResponse {
-    wcag_analysis: Array<{
-        guideline: string;
-        issue: string;
-    }>;
+    wcag_analysis: WCAGIssue[];
     usability_insights: string[];
     recommendations: string[];
 }
@@ -46,7 +48,7 @@ export const InputWebLink = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto p-4">
+        <div className="max-w-4xl mx-auto p-4">
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <input
                     type="url"
@@ -73,15 +75,15 @@ export const InputWebLink = () => {
             )}
 
             {analysis && (
-                <div className="mt-8 space-y-6">
+                <div className="mt-8 space-y-8">
                     {analysis.wcag_analysis.length > 0 && (
                         <section>
                             <h2 className="text-2xl font-bold text-neutral-50 mb-4">WCAG Analysis</h2>
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 {analysis.wcag_analysis.map((item, index) => (
-                                    <div key={index} className="p-4 bg-navy rounded-lg">
-                                        <h3 className="font-semibold text-sand">{item.guideline}</h3>
-                                        <p className="text-neutral-300 mt-2">{item.issue}</p>
+                                    <div key={index} className="p-6 bg-navy rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                        <h3 className="text-lg font-semibold text-sand mb-2">{item.guideline}</h3>
+                                        <p className="text-neutral-300">{item.issue}</p>
                                     </div>
                                 ))}
                             </div>
@@ -91,29 +93,33 @@ export const InputWebLink = () => {
                     {analysis.usability_insights.length > 0 && (
                         <section>
                             <h2 className="text-2xl font-bold text-neutral-50 mb-4">Usability Insights</h2>
-                            <ul className="space-y-2">
+                            <div className="grid grid-cols-1 gap-4">
                                 {analysis.usability_insights.map((insight, index) => (
-                                    <li key={index} className="text-neutral-300">• {insight}</li>
+                                    <div key={index} className="p-6 bg-teal rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                        <p className="text-neutral-300">{insight}</p>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         </section>
                     )}
 
                     {analysis.recommendations.length > 0 && (
                         <section>
                             <h2 className="text-2xl font-bold text-neutral-50 mb-4">Recommendations</h2>
-                            <ul className="space-y-2">
+                            <div className="grid grid-cols-1 gap-4">
                                 {analysis.recommendations.map((recommendation, index) => (
-                                    <li key={index} className="text-neutral-300">• {recommendation}</li>
+                                    <div key={index} className="p-6 bg-sage-dark rounded-lg border border-navy-light hover:border-sand transition-colors">
+                                        <p className="text-neutral-300">{recommendation}</p>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         </section>
                     )}
 
                     {analysis.wcag_analysis.length === 0 && 
                      analysis.usability_insights.length === 0 && 
                      analysis.recommendations.length === 0 && (
-                        <div className="text-center text-neutral-300">
+                        <div className="text-center text-neutral-300 p-6 bg-navy rounded-lg border border-navy-light">
                             No issues found. The website appears to follow good accessibility and usability practices.
                         </div>
                     )}
